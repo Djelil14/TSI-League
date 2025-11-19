@@ -66,7 +66,7 @@ function MatchCard({ game }: { game: TSIGame }) {
 
 
 export default async function LatestResults() {
-  let recentMatches: NBAGame[] = [];
+  let recentMatches: TSIGame[] = [];
   let hasError = false;
 
   try {

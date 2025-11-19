@@ -2,23 +2,24 @@ import { nbaApi } from "@/lib/nba-api";
 import { NBATeam, NBAGame } from "@/types/nba-api";
 import { TeamStanding } from "@/components/teams/StandingsTable";
 
-// Importation des équipes statiques (à créer dans src/data/teams.ts)
-import { teams } from "@/data/teams";
-
 export async function getStandings(
   conference: "East" | "West" | "all" = "all"
 ): Promise<TeamStanding[]> {
   try {
-    // ON SUPPRIME l'appel à getTeams() car il N'EXISTE PAS
-    const teamsResponse = { data: teams };
-
-    // On garde l'appel games (si l'API fonctionne)
+    // Sequential requests to avoid rate limiting
+    const teamsResponse = await nbaApi.getAllTeams();
+    
+    // Small delay between requests
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    
+    // Reduce per_page to avoid 400 errors and use current year
+    const currentYear = new Date().getFullYear().toString();
     const gamesResponse = await nbaApi.getGames({
-      seasons: [new Date().getFullYear()],
-      per_page: "1000",
+      seasons: currentYear,
+      per_page: "100", // Reduced from 1000 to avoid errors
     });
 
-    const teamsList = teamsResponse.data || [];
+    const teamsList = teamsResponse || [];
     const games = gamesResponse.data || [];
 
     const calculatedStandings = teamsList.map((team) => {

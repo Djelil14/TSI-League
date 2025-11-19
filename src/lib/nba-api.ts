@@ -9,8 +9,70 @@ import {
 const BASE_URL = "https://api.balldontlie.io/v1";
 const API_KEY = process.env.BALLDONTLIE_API_KEY || "";
 
+// Rate limiting configuration
+const RATE_LIMIT_DELAY = 200; // 200ms between requests (5 requests per second max)
+const MAX_RETRIES = 3;
+const INITIAL_RETRY_DELAY = 1000; // 1 second
+
 class NBAApiService {
-  private async fetch<T>(endpoint: string, params?: Record<string, string>): Promise<APIResponse<T>> {
+  private lastRequestTime = 0;
+  private requestQueue: Array<() => Promise<void>> = [];
+  private isProcessingQueue = false;
+
+  // Rate limiting: ensure minimum delay between requests
+  private async rateLimit(): Promise<void> {
+    const now = Date.now();
+    const timeSinceLastRequest = now - this.lastRequestTime;
+    
+    if (timeSinceLastRequest < RATE_LIMIT_DELAY) {
+      const delay = RATE_LIMIT_DELAY - timeSinceLastRequest;
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+    
+    this.lastRequestTime = Date.now();
+  }
+
+  // Retry with exponential backoff
+  private async retryWithBackoff<T>(
+    fn: () => Promise<T>,
+    retries = MAX_RETRIES,
+    delay = INITIAL_RETRY_DELAY
+  ): Promise<T> {
+    try {
+      return await fn();
+    } catch (error) {
+      if (retries === 0) {
+        throw error;
+      }
+
+      // Check if it's a rate limit error (429)
+      const isRateLimitError =
+        error instanceof Error &&
+        error.message.includes("429");
+
+      if (isRateLimitError) {
+        // For rate limit errors, wait longer before retrying
+        const backoffDelay = delay * 2;
+        console.log(
+          `Rate limit hit, waiting ${backoffDelay}ms before retry...`
+        );
+        await new Promise((resolve) => setTimeout(resolve, backoffDelay));
+        return this.retryWithBackoff(fn, retries - 1, backoffDelay);
+      }
+
+      // For other errors, use standard exponential backoff
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      return this.retryWithBackoff(fn, retries - 1, delay * 2);
+    }
+  }
+
+  private async fetch<T>(
+    endpoint: string,
+    params?: Record<string, string>
+  ): Promise<APIResponse<T>> {
+    // Apply rate limiting
+    await this.rateLimit();
+
     const url = new URL(`${BASE_URL}${endpoint}`);
 
     if (params) {
@@ -19,18 +81,32 @@ class NBAApiService {
       });
     }
 
-    const response = await fetch(url.toString(), {
-      headers: {
-        Authorization: API_KEY,
-      },
-      next: { revalidate: 60 }, // Cache for 60 seconds
+    return this.retryWithBackoff(async () => {
+      const response = await fetch(url.toString(), {
+        headers: {
+          Authorization: API_KEY,
+        },
+        next: { revalidate: 3600 }, // Cache for 1 hour
+      });
+
+      if (!response.ok) {
+        // Check for rate limit
+        if (response.status === 429) {
+          const retryAfter = response.headers.get("Retry-After");
+          if (retryAfter) {
+            const waitTime = parseInt(retryAfter) * 1000;
+            console.log(`Rate limited. Waiting ${waitTime}ms...`);
+            await new Promise((resolve) => setTimeout(resolve, waitTime));
+          }
+        }
+        throw new Error(
+          `NBA API Error: ${response.status} ${response.statusText}`
+        );
+      }
+
+      // Read response body directly - Next.js handles cloning internally
+      return await response.json();
     });
-
-    if (!response.ok) {
-      throw new Error(`NBA API Error: ${response.status} ${response.statusText}`);
-    }
-
-    return response.json();
   }
 
   // Teams

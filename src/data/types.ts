@@ -1,5 +1,5 @@
 export interface Team {
-  id: string;
+  id: number;
   name: string;
   city: string;
   abbreviation: string;
@@ -18,7 +18,7 @@ export interface Player {
   id: string;
   firstName: string;
   lastName: string;
-  teamId: string;
+  teamId: number;
   jerseyNumber: number;
   position: "PG" | "SG" | "SF" | "PF" | "C";
   height: string; // e.g., "6'5\""
@@ -46,8 +46,8 @@ export interface Match {
   id: string;
   gameweek: number;
   date: string;
-  homeTeamId: string;
-  awayTeamId: string;
+  homeTeamId: number;
+  awayTeamId: number;
   homeScore?: number;
   awayScore?: number;
   status: "scheduled" | "live" | "finished";
@@ -58,7 +58,7 @@ export interface Match {
 }
 
 export interface Standing {
-  teamId: string;
+  teamId: number;
   wins: number;
   losses: number;
   winPercentage: number;

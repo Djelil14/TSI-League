@@ -9,7 +9,9 @@ import LatestResults from "@/components/matches/LatestResults";
 import UpcomingMatches from "@/components/matches/UpcomingMatches";
 import CurrentStandings from "@/components/teams/CurrentStandings";
 
-export const revalidate = 60; // Revalidate every 60 seconds
+// Use ISR with longer revalidate to reduce API calls during build
+export const dynamic = 'force-dynamic';
+export const revalidate = 300; // Revalidate every 5 minutes
 
 // Helper function to get team logo path
 function getTeamLogo(teamName: string): string {

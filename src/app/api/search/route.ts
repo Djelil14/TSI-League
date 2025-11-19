@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { nbaApi } from "@/lib/nba-api";
 
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/search
  * Recherche globale (équipes + joueurs)

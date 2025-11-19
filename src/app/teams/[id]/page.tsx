@@ -4,21 +4,14 @@ import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import { nbaApi } from "@/lib/nba-api";
 import { notFound } from "next/navigation";
+import { TSI_LEAGUE_CONFIG } from "@/lib/tsi-config";
 
-export const revalidate = 300; // Revalidate every 5 minutes
+// Use dynamic rendering instead of static generation to avoid build timeouts
+export const dynamic = 'force-dynamic';
+export const revalidate = 300; // Revalidate every 5 minutes (ISR)
 
-// Generate static params for all teams
-export async function generateStaticParams() {
-  try {
-    const teams = await nbaApi.getAllTeams();
-    return teams.map((team) => ({
-      id: team.id.toString(),
-    }));
-  } catch (error) {
-    console.error("Error generating static params:", error);
-    return [];
-  }
-}
+// Don't generate static params - pages will be rendered on demand
+// This prevents build timeouts due to API rate limiting
 
 interface TeamPageProps {
   params: {
@@ -28,13 +21,21 @@ interface TeamPageProps {
 
 async function getTeamData(id: number) {
   try {
-    const [team, roster, games] = await Promise.all([
-      nbaApi.getTeamById(id),
-      nbaApi.getTeamPlayers(id).catch(() => []),
-      nbaApi
-        .getTeamGames(id, new Date().getFullYear().toString())
-        .catch(() => []),
-    ]);
+    // Sequential requests with delays to avoid rate limiting
+    // Instead of Promise.all, we make requests one by one
+    const team = await nbaApi.getTeamById(id);
+    
+    // Small delay between requests
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    
+    const roster = await nbaApi.getTeamPlayers(id).catch(() => []);
+    
+    // Small delay between requests
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    
+    const games = await nbaApi
+      .getTeamGames(id, new Date().getFullYear().toString())
+      .catch(() => []);
 
     return { team, roster, games };
   } catch (error) {

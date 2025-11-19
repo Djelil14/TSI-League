@@ -1,6 +1,10 @@
 import { getStandings } from "@/data/standings";
 import StandingsPageClient from "./StandingsPageClient";
 
+// Use dynamic rendering to avoid build timeouts
+export const dynamic = 'force-dynamic';
+export const revalidate = 300; // Revalidate every 5 minutes (ISR)
+
 export default async function StandingsPage() {
   const standings = await getStandings("all");
 

@@ -5,23 +5,12 @@ import Link from "next/link";
 import { nbaApi } from "@/lib/nba-api";
 import { notFound } from "next/navigation";
 
-export const revalidate = 300; // Revalidate every 5 minutes
+// Use dynamic rendering instead of static generation to avoid build timeouts
+export const dynamic = 'force-dynamic';
+export const revalidate = 300; // Revalidate every 5 minutes (ISR)
 
-// Generate static params for active players (limited to prevent excessive build time)
-export async function generateStaticParams() {
-  try {
-    const response = await nbaApi.getActivePlayers({
-      per_page: "100",
-    });
-    const players = response.data || [];
-    return players.map((player) => ({
-      id: player.id.toString(),
-    }));
-  } catch (error) {
-    console.error("Error generating static params:", error);
-    return [];
-  }
-}
+// Don't generate static params - pages will be rendered on demand
+// This prevents build timeouts due to API rate limiting
 
 interface PlayerPageProps {
   params: {

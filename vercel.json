@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/generate-standings",
+      "schedule": "0 5 * * *"
+    }
+  ]
+}

@@ -12,7 +12,7 @@ export default async function CurrentStandings() {
   return (
     <section className="container-custom py-20">
       <div className="mb-8 flex items-center justify-between">
-        <h2 className="text-brand-secondary-900 dark:text-white">
+        <h2 className="text-3xl font-display font-bold text-brand-secondary-900 dark:text-white">
           Current Standings
         </h2>
         <Button variant="ghost" asChild>
@@ -20,16 +20,27 @@ export default async function CurrentStandings() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div>
-          <h3 className="text-lg font-semibold mb-4">East Conference</h3>
-          <StandingsTable standings={eastStandings} />
+      {allStandings.length > 0 ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div>
+            <h3 className="text-lg font-semibold mb-4">East Conference</h3>
+            <StandingsTable standings={eastStandings} />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold mb-4">West Conference</h3>
+            <StandingsTable standings={westStandings} />
+          </div>
         </div>
-        <div>
-          <h3 className="text-lg font-semibold mb-4">West Conference</h3>
-          <StandingsTable standings={westStandings} />
-        </div>
-      </div>
+      ) : (
+        <Card className="p-12 text-center">
+          <p className="text-brand-secondary-500 text-lg">
+            No standings found.
+          </p>
+          <p className="text-sm text-brand-secondary-400 mt-2">
+            Please try again later.
+          </p>
+        </Card>
+      )}
     </section>
   );
 }

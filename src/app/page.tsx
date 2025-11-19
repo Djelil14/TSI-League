@@ -3,9 +3,8 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import Link from "next/link";
 import Image from "next/image";
-import { nbaApi } from "@/lib/nba-api";
-import { TSI_LEAGUE_CONFIG } from "@/lib/tsi-config";
-import { NBATeam } from "@/types/nba-api";
+import { tsiApi } from "@/lib/tsi-api";
+import type { TSITeam } from "@/lib/tsi-api";
 import LatestResults from "@/components/matches/LatestResults";
 import UpcomingMatches from "@/components/matches/UpcomingMatches";
 import CurrentStandings from "@/components/teams/CurrentStandings";
@@ -14,32 +13,13 @@ import CurrentStandings from "@/components/teams/CurrentStandings";
 export const dynamic = 'force-dynamic';
 export const revalidate = 300; // Revalidate every 5 minutes
 
-// Helper function to get team logo path
-function getTeamLogo(teamName: string): string {
-  const logoMap: { [key: string]: string } = {
-    "Atlanta Hawks": "Atlanta.png",
-    "Boston Celtics": "Boston.png",
-    "Chicago Bulls": "Chicago.png",
-    "LA Clippers": "LAC.png",
-    "Los Angeles Lakers": "Lakers.png",
-    "New York Knicks": "NYK.png",
-    "Philadelphia 76ers": "PHI.png",
-    "Portland Trail Blazers": "POR.png",
-    "Golden State Warriors": "Golden State.png",
-  };
-
-  const fileName = logoMap[teamName];
-  return fileName ? `/images/logos/teams/${fileName}` : "/images/logos/site/tsi-logo.png";
-}
+import { getTeamLogo } from "@/lib/utils/team-utils";
 
 async function getTopTeams() {
   try {
-    const teams = await nbaApi.getAllTeams();
-    // Filter to only TSI League teams and return first 5
-    const tsiTeams = teams.filter((team) =>
-      TSI_LEAGUE_CONFIG.selectedTeamIds.includes(team.id)
-    );
-    return tsiTeams.slice(0, 5);
+    // Utiliser le service TSI avec données mock - 6 équipes
+    const teams = tsiApi.getAllTeams();
+    return teams.slice(0, 6);
   } catch (error) {
     console.error("Error fetching teams:", error);
     if (process.env.NODE_ENV === "development") {
@@ -50,7 +30,7 @@ async function getTopTeams() {
 }
 
 export default async function HomePage() {
-  let topTeams: NBATeam[] = [];
+  let topTeams: TSITeam[] = [];
   
   try {
     topTeams = await getTopTeams();
@@ -99,34 +79,39 @@ export default async function HomePage() {
               className="border-2 border-white text-white hover:bg-white hover:text-brand-primary-600"
               asChild
             >
-              <Link href="/standings">View Standings</Link>
+              <Link href="/teams">View Standings</Link>
             </Button>
           </div>
         </div>
       </section>
 
-      <UpcomingMatches />
-
+      {/* Derniers résultats */}
       <LatestResults />
 
-      {/* Top 5 Standings */}
+      {/* Prochains matchs */}
+      <UpcomingMatches />
+
+      {/* Classement actuel */}
+      <CurrentStandings />
+
+      {/* Top Teams */}
       <section className="container-custom py-20 bg-brand-secondary-50 dark:bg-brand-secondary-800/50">
         <div className="mb-8 flex items-center justify-between">
-          <h2 className="text-brand-secondary-900 dark:text-white">
+          <h2 className="text-3xl font-display font-bold text-brand-secondary-900 dark:text-white">
             Top Teams
           </h2>
           <Button variant="ghost" asChild>
-            <Link href="/standings">Full Standings</Link>
+            <Link href="/teams">View All</Link>
           </Button>
         </div>
 
         {topTeams.length > 0 ? (
-          <div className="grid gap-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {topTeams.map((team, index) => (
               <Link key={team.id} href={`/teams/${team.id}`}>
-                <Card className="card-hover p-4 transition-all hover:border-brand-primary-500 border-2 border-transparent shadow-md hover:shadow-xl">
-                  <div className="flex items-center gap-4">
-                    <div className="relative h-12 w-12 flex-shrink-0">
+                <Card className="card-hover p-6 transition-all hover:border-brand-primary-500 border-2 border-transparent shadow-md hover:shadow-xl">
+                  <div className="flex flex-col items-center text-center gap-4">
+                    <div className="relative h-20 w-20 flex-shrink-0">
                       <Image
                         src={getTeamLogo(team.full_name)}
                         alt={`${team.full_name} logo`}
@@ -135,7 +120,7 @@ export default async function HomePage() {
                       />
                     </div>
                     <div className="flex-1">
-                      <div className="font-semibold text-lg">
+                      <div className="font-semibold text-lg mb-2">
                         {team.full_name}
                       </div>
                       <div className="text-sm text-brand-secondary-500">
@@ -150,7 +135,7 @@ export default async function HomePage() {
           </div>
         ) : (
           <Card className="p-12 text-center">
-            <p className="text-brand-secondary-500">
+            <p className="text-brand-secondary-500 text-lg">
               Unable to load teams at this time.
             </p>
             <p className="text-sm text-brand-secondary-400 mt-2">
@@ -160,13 +145,11 @@ export default async function HomePage() {
         )}
       </section>
 
-      <CurrentStandings />
-
       {/* Call to Action */}
       <section className="container-custom mb-20">
-        <div className="rounded-2xl bg-gradient-court from-brand-primary-500 to-brand-primary-700 p-12 text-white text-center shadow-2xl">
-          <h2 className="mb-4 text-4xl font-bold">Stay Updated</h2>
-          <p className="mx-auto mb-8 max-w-2xl text-brand-primary-100 text-lg">
+        <div className="rounded-2xl bg-gradient-to-r from-brand-secondary-800 to-brand-secondary-900 p-12 text-white text-center shadow-2xl">
+          <h2 className="mb-4 text-4xl font-display font-bold">Stay Updated</h2>
+          <p className="mx-auto mb-8 max-w-2xl text-white/90 text-lg">
             Get the latest news, scores, and highlights from the TSI League.
             Follow your favorite teams and players throughout the season.
           </p>
@@ -174,18 +157,10 @@ export default async function HomePage() {
             <Button
               size="lg"
               variant="primary"
-              className="bg-white text-brand-primary-600 hover:bg-brand-primary-50"
+              className="bg-brand-accent-500 text-white hover:bg-brand-accent-600"
               asChild
             >
-              <Link href="/teams">Explore Teams</Link>
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="border-2 border-white text-white hover:bg-white hover:text-brand-primary-600"
-              asChild
-            >
-              <Link href="/players">View Players</Link>
+              <Link href="/matches">Discover More</Link>
             </Button>
           </div>
         </div>

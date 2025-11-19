@@ -1,134 +1,70 @@
-import { nbaApi } from "@/lib/nba-api";
-import { NBATeam, NBAGame } from "@/types/nba-api";
+import { tsiApi } from "@/lib/tsi-api";
+import { teams } from "@/data/teams/index";
 import { TeamStanding } from "@/components/teams/StandingsTable";
-import { TSI_LEAGUE_CONFIG } from "@/lib/tsi-config";
+import type { TSITeam } from "@/lib/tsi-api";
 
 export async function getStandings(
   conference: "East" | "West" | "all" = "all"
 ): Promise<TeamStanding[]> {
   try {
-    // Sequential requests to avoid rate limiting
-    const teamsResponse = await nbaApi.getAllTeams();
+    // Utiliser le service TSI avec données mock
+    const tsiTeams = tsiApi.getAllTeams();
+    const standingsData = tsiApi.getStandings(conference);
     
-    // Filter to only TSI teams
-    const tsiTeams = teamsResponse.filter((team) =>
-      TSI_LEAGUE_CONFIG.selectedTeamIds.includes(team.id)
-    );
-    
-    // Small delay between requests
-    await new Promise((resolve) => setTimeout(resolve, 200));
-    
-    // Get TSI team IDs as comma-separated string
-    const tsiTeamIds = TSI_LEAGUE_CONFIG.selectedTeamIds.join(",");
-    
-    // Reduce per_page to avoid 400 errors and use current year
-    const currentYear = new Date().getFullYear().toString();
-    const gamesResponse = await nbaApi.getGames({
-      seasons: currentYear,
-      team_ids: tsiTeamIds, // Filter to TSI teams only
-      per_page: "100", // Reduced from 1000 to avoid errors
-    });
-
-    const teamsList = tsiTeams || [];
-    const games = gamesResponse.data || [];
-
-    const calculatedStandings = teamsList.map((team) => {
-      const teamGames = games.filter(
-        (g) =>
-          g.status === "Final" &&
-          (g.home_team.id === team.id || g.visitor_team.id === team.id)
-      );
-
-      const wins = teamGames.filter((g) => {
-        if (g.home_team.id === team.id) {
-          return g.home_team_score > g.visitor_team_score;
-        } else {
-          return g.visitor_team_score > g.home_team_score;
-        }
-      }).length;
-
-      const losses = teamGames.length - wins;
-
-      const pointsFor = teamGames.reduce((acc, g) => {
-        if (g.home_team.id === team.id) {
-          return acc + g.home_team_score;
-        } else {
-          return acc + g.visitor_team_score;
-        }
-      }, 0);
-
-      const pointsAgainst = teamGames.reduce((acc, g) => {
-        if (g.home_team.id === team.id) {
-          return acc + g.visitor_team_score;
-        } else {
-          return acc + g.home_team_score;
-        }
-      }, 0);
-
-      const winPercentage =
-        teamGames.length > 0
-          ? ((wins / teamGames.length) * 100).toFixed(1)
-          : "0.0";
-
-      const recentGames = teamGames
-        .sort(
-          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-        )
-        .slice(0, 10);
-
-      let streak = "";
-      if (recentGames.length > 0) {
-        const lastGame = recentGames[0];
-        const lastGameWon =
-          (lastGame.home_team.id === team.id &&
-            lastGame.home_team_score > lastGame.visitor_team_score) ||
-          (lastGame.visitor_team.id === team.id &&
-            lastGame.visitor_team_score > lastGame.home_team_score);
-
-        let streakCount = 0;
-        for (const game of recentGames) {
-          const won =
-            (game.home_team.id === team.id &&
-              game.home_team_score > game.visitor_team_score) ||
-            (game.visitor_team.id === team.id &&
-              game.visitor_team_score > game.home_team_score);
-
-          if (won === lastGameWon) {
-            streakCount++;
-          } else {
-            break;
+    // Convertir les standings en TeamStanding
+    const teamStandings: TeamStanding[] = standingsData
+      .map((standing): TeamStanding | null => {
+        try {
+          // Trouver l'équipe correspondante
+          const teamData = teams.find((t) => t.id === standing.teamId);
+          
+          if (!teamData) {
+            console.warn(`Team not found for standing ${standing.teamId}`);
+            return null;
           }
+
+          // Trouver le TSITeam correspondant
+          const tsiTeam = tsiTeams.find((t) => 
+            t.full_name === `${teamData.city} ${teamData.name}` ||
+            t.abbreviation === teamData.abbreviation
+          );
+
+          if (!tsiTeam) {
+            console.warn(`TSI Team not found for ${teamData.city} ${teamData.name}`);
+            return null;
+          }
+
+          return {
+            id: tsiTeam.id,
+            full_name: tsiTeam.full_name,
+            abbreviation: tsiTeam.abbreviation,
+            conference: tsiTeam.conference,
+            division: tsiTeam.division,
+            wins: standing.wins,
+            losses: standing.losses,
+            winPercentage: standing.winPercentage, // Keep as number
+            gamesBehind: standing.gamesBehind,
+            streak: standing.streak,
+            pointsFor: Math.round(standing.pointsPerGame * (standing.wins + standing.losses)),
+            pointsAgainst: Math.round(standing.pointsAllowedPerGame * (standing.wins + standing.losses)),
+            pointDifferential: Math.round((standing.pointsPerGame - standing.pointsAllowedPerGame) * (standing.wins + standing.losses)),
+          };
+        } catch (error) {
+          console.error(`Error processing standing for team ${standing.teamId}:`, error);
+          return null;
         }
+      })
+      .filter((standing): standing is TeamStanding => standing !== null);
 
-        streak = `${lastGameWon ? "W" : "L"}${streakCount}`;
-      } else {
-        streak = "-";
-      }
-
-      return {
-        ...team,
-        wins,
-        losses,
-        winPercentage,
-        gamesBehind: 0,
-        streak,
-        pointsFor,
-        pointsAgainst,
-        pointDifferential: pointsFor - pointsAgainst,
-      };
-    });
-
-    calculatedStandings.sort((a, b) => {
-      const aWinPct = parseFloat(a.winPercentage);
-      const bWinPct = parseFloat(b.winPercentage);
-      if (bWinPct !== aWinPct) return bWinPct - aWinPct;
+    // Trier par pourcentage de victoires
+    teamStandings.sort((a, b) => {
+      if (b.winPercentage !== a.winPercentage) return b.winPercentage - a.winPercentage;
       return b.wins - a.wins;
     });
 
-    ["East", "West"].forEach((conference) => {
-      const confTeams = calculatedStandings.filter(
-        (t) => t.conference === conference
-      );
+    // Calculer gamesBehind par conférence
+    ["East", "West"].forEach((conf) => {
+      const confTeams = teamStandings.filter((t) => t.conference === conf);
       if (confTeams.length > 0) {
         const leader = confTeams[0];
         confTeams.forEach((team) => {
@@ -138,9 +74,9 @@ export async function getStandings(
       }
     });
 
-    if (conference === "all") return calculatedStandings;
+    if (conference === "all") return teamStandings;
 
-    return calculatedStandings.filter((t) => t.conference === conference);
+    return teamStandings.filter((t) => t.conference === conference);
   } catch (error) {
     console.error("Error fetching standings:", error);
     return [];

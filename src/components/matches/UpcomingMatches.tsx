@@ -95,7 +95,15 @@ function MatchCard({ game }: { game: NBAGame }) {
 
 
 export default async function UpcomingMatches() {
-  const upcomingMatches = await getUpcomingMatches();
+  let upcomingMatches: NBAGame[] = [];
+  let hasError = false;
+
+  try {
+    upcomingMatches = await getUpcomingMatches();
+  } catch (error) {
+    console.error("Failed to load upcoming matches:", error);
+    hasError = true;
+  }
 
   return (
     <section className="container-custom py-20">
@@ -108,7 +116,16 @@ export default async function UpcomingMatches() {
         </Button>
       </div>
 
-      {upcomingMatches.length > 0 ? (
+      {hasError ? (
+        <Card className="p-12 text-center">
+          <p className="text-brand-secondary-500 mb-2">
+            Unable to load upcoming matches at this time.
+          </p>
+          <p className="text-sm text-brand-secondary-400">
+            Please try again later or check the matches page.
+          </p>
+        </Card>
+      ) : upcomingMatches.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {upcomingMatches.map((game) => (
             <MatchCard key={game.id} game={game} />
@@ -117,7 +134,10 @@ export default async function UpcomingMatches() {
       ) : (
         <Card className="p-12 text-center">
           <p className="text-brand-secondary-500">
-            No upcoming matches found.
+            No upcoming matches found for TSI League teams.
+          </p>
+          <p className="text-sm text-brand-secondary-400 mt-2">
+            Check back later for scheduled games.
           </p>
         </Card>
       )}

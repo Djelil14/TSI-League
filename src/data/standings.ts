@@ -1,6 +1,7 @@
 import { nbaApi } from "@/lib/nba-api";
 import { NBATeam, NBAGame } from "@/types/nba-api";
 import { TeamStanding } from "@/components/teams/StandingsTable";
+import { TSI_LEAGUE_CONFIG } from "@/lib/tsi-config";
 
 export async function getStandings(
   conference: "East" | "West" | "all" = "all"
@@ -9,17 +10,26 @@ export async function getStandings(
     // Sequential requests to avoid rate limiting
     const teamsResponse = await nbaApi.getAllTeams();
     
+    // Filter to only TSI teams
+    const tsiTeams = teamsResponse.filter((team) =>
+      TSI_LEAGUE_CONFIG.selectedTeamIds.includes(team.id)
+    );
+    
     // Small delay between requests
     await new Promise((resolve) => setTimeout(resolve, 200));
+    
+    // Get TSI team IDs as comma-separated string
+    const tsiTeamIds = TSI_LEAGUE_CONFIG.selectedTeamIds.join(",");
     
     // Reduce per_page to avoid 400 errors and use current year
     const currentYear = new Date().getFullYear().toString();
     const gamesResponse = await nbaApi.getGames({
       seasons: currentYear,
+      team_ids: tsiTeamIds, // Filter to TSI teams only
       per_page: "100", // Reduced from 1000 to avoid errors
     });
 
-    const teamsList = teamsResponse || [];
+    const teamsList = tsiTeams || [];
     const games = gamesResponse.data || [];
 
     const calculatedStandings = teamsList.map((team) => {

@@ -4,29 +4,47 @@ import Link from "next/link";
 import Image from "next/image";
 import { nbaApi } from "@/lib/nba-api";
 import { NBAGame } from "@/types/nba-api";
+import { TSI_LEAGUE_CONFIG } from "@/lib/tsi-config";
 
 async function getRecentMatches(): Promise<NBAGame[]> {
   try {
     const today = new Date();
-    const sevenDaysAgo = new Date(today);
-    sevenDaysAgo.setDate(today.getDate() - 7);
+    const thirtyDaysAgo = new Date(today);
+    thirtyDaysAgo.setDate(today.getDate() - 30); // Extended to 30 days to find more matches
 
     const formattedToday = today.toISOString().split("T")[0];
-    const formattedSevenDaysAgo = sevenDaysAgo.toISOString().split("T")[0];
+    const formattedThirtyDaysAgo = thirtyDaysAgo.toISOString().split("T")[0];
+
+    // Get TSI team IDs as comma-separated string
+    const tsiTeamIds = TSI_LEAGUE_CONFIG.selectedTeamIds.join(",");
 
     const response = await nbaApi.getGames({
-      start_date: formattedSevenDaysAgo,
+      start_date: formattedThirtyDaysAgo,
       end_date: formattedToday,
-      per_page: "100", // Fetch more to ensure we get 5 finished games
+      team_ids: tsiTeamIds, // Filter to TSI teams only
+      per_page: "100",
     });
 
     const finishedGames = (response.data || [])
-      .filter((game) => game.status === "Final")
+      .filter((game) => {
+        // Only include finished games with TSI teams
+        const isTSITeam = (teamId: number) => 
+          TSI_LEAGUE_CONFIG.selectedTeamIds.includes(teamId);
+        
+        return (
+          game.status === "Final" &&
+          (isTSITeam(game.home_team.id) || isTSITeam(game.visitor_team.id))
+        );
+      })
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     return finishedGames.slice(0, 5);
   } catch (error) {
     console.error("Error fetching recent matches:", error);
+    // Return empty array but log the error for debugging
+    if (process.env.NODE_ENV === "development") {
+      console.error("Recent matches error details:", error);
+    }
     return [];
   }
 }
@@ -116,7 +134,15 @@ function MatchCard({ game }: { game: NBAGame }) {
 
 
 export default async function LatestResults() {
-  const recentMatches = await getRecentMatches();
+  let recentMatches: NBAGame[] = [];
+  let hasError = false;
+
+  try {
+    recentMatches = await getRecentMatches();
+  } catch (error) {
+    console.error("Failed to load recent matches:", error);
+    hasError = true;
+  }
 
   return (
     <section className="container-custom py-20">
@@ -129,7 +155,16 @@ export default async function LatestResults() {
         </Button>
       </div>
 
-      {recentMatches.length > 0 ? (
+      {hasError ? (
+        <Card className="p-12 text-center">
+          <p className="text-brand-secondary-500 mb-2">
+            Unable to load recent matches at this time.
+          </p>
+          <p className="text-sm text-brand-secondary-400">
+            Please try again later or check the matches page.
+          </p>
+        </Card>
+      ) : recentMatches.length > 0 ? (
         <div className="grid gap-4">
           {recentMatches.map((game) => (
             <MatchCard key={game.id} game={game} />
@@ -138,7 +173,10 @@ export default async function LatestResults() {
       ) : (
         <Card className="p-12 text-center">
           <p className="text-brand-secondary-500">
-            No recent matches found.
+            No recent matches found for TSI League teams.
+          </p>
+          <p className="text-sm text-brand-secondary-400 mt-2">
+            Check back later for game results.
           </p>
         </Card>
       )}

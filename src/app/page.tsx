@@ -41,14 +41,21 @@ async function getTopTeams() {
     return tsiTeams.slice(0, 5);
   } catch (error) {
     console.error("Error fetching teams:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Top teams error details:", error);
+    }
     return [];
   }
 }
 
 export default async function HomePage() {
-  const [topTeams] = await Promise.all([
-    getTopTeams(),
-  ]);
+  let topTeams = [];
+  
+  try {
+    topTeams = await getTopTeams();
+  } catch (error) {
+    console.error("Failed to load top teams:", error);
+  }
 
   return (
     <div className="space-y-16">
@@ -112,33 +119,44 @@ export default async function HomePage() {
           </Button>
         </div>
 
-        <div className="grid gap-4">
-          {topTeams.map((team, index) => (
-            <Link key={team.id} href={`/teams/${team.id}`}>
-              <Card className="card-hover p-4 transition-all hover:border-brand-primary-500 border-2 border-transparent shadow-md hover:shadow-xl">
-                <div className="flex items-center gap-4">
-                  <div className="relative h-12 w-12 flex-shrink-0">
-                    <Image
-                      src={getTeamLogo(team.full_name)}
-                      alt={`${team.full_name} logo`}
-                      fill
-                      className="object-contain"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-semibold text-lg">
-                      {team.full_name}
+        {topTeams.length > 0 ? (
+          <div className="grid gap-4">
+            {topTeams.map((team, index) => (
+              <Link key={team.id} href={`/teams/${team.id}`}>
+                <Card className="card-hover p-4 transition-all hover:border-brand-primary-500 border-2 border-transparent shadow-md hover:shadow-xl">
+                  <div className="flex items-center gap-4">
+                    <div className="relative h-12 w-12 flex-shrink-0">
+                      <Image
+                        src={getTeamLogo(team.full_name)}
+                        alt={`${team.full_name} logo`}
+                        fill
+                        className="object-contain"
+                      />
                     </div>
-                    <div className="text-sm text-brand-secondary-500">
-                      {team.conference} Conference
+                    <div className="flex-1">
+                      <div className="font-semibold text-lg">
+                        {team.full_name}
+                      </div>
+                      <div className="text-sm text-brand-secondary-500">
+                        {team.conference} Conference
+                      </div>
                     </div>
+                    <Badge variant="secondary">{team.abbreviation}</Badge>
                   </div>
-                  <Badge variant="secondary">{team.abbreviation}</Badge>
-                </div>
-              </Card>
-            </Link>
-          ))}
-        </div>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <Card className="p-12 text-center">
+            <p className="text-brand-secondary-500">
+              Unable to load teams at this time.
+            </p>
+            <p className="text-sm text-brand-secondary-400 mt-2">
+              Please try refreshing the page.
+            </p>
+          </Card>
+        )}
       </section>
 
       <CurrentStandings />

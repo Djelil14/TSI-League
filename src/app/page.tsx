@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { nbaApi } from "@/lib/nba-api";
 import { TSI_LEAGUE_CONFIG } from "@/lib/tsi-config";
+import { NBATeam } from "@/types/nba-api";
 import LatestResults from "@/components/matches/LatestResults";
 import UpcomingMatches from "@/components/matches/UpcomingMatches";
 import CurrentStandings from "@/components/teams/CurrentStandings";
@@ -49,7 +50,7 @@ async function getTopTeams() {
 }
 
 export default async function HomePage() {
-  let topTeams = [];
+  let topTeams: NBATeam[] = [];
   
   try {
     topTeams = await getTopTeams();

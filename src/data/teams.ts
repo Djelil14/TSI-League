@@ -2,7 +2,7 @@ import { Team } from "./types";
 
 export const teams: Team[] = [
   {
-    id: "thunder-wolves",
+    id: 1,
     name: "Thunder Wolves",
     city: "Seattle",
     abbreviation: "SEA",
@@ -17,7 +17,7 @@ export const teams: Team[] = [
     headCoach: "Marcus Thompson",
   },
   {
-    id: "lightning-knights",
+    id: 2,
     name: "Lightning Knights",
     city: "Miami",
     abbreviation: "MIA",
@@ -32,7 +32,7 @@ export const teams: Team[] = [
     headCoach: "Derek Williams",
   },
   {
-    id: "storm-breakers",
+    id: 3,
     name: "Storm Breakers",
     city: "Chicago",
     abbreviation: "CHI",
@@ -47,7 +47,7 @@ export const teams: Team[] = [
     headCoach: "James Patterson",
   },
   {
-    id: "desert-phoenixes",
+    id: 4,
     name: "Desert Phoenixes",
     city: "Phoenix",
     abbreviation: "PHX",
@@ -62,7 +62,7 @@ export const teams: Team[] = [
     headCoach: "Carlos Rivera",
   },
   {
-    id: "coastal-titans",
+    id: 5,
     name: "Coastal Titans",
     city: "Los Angeles",
     abbreviation: "LAC",
@@ -77,7 +77,7 @@ export const teams: Team[] = [
     headCoach: "Michael Chen",
   },
   {
-    id: "mountain-grizzlies",
+    id: 6,
     name: "Mountain Grizzlies",
     city: "Denver",
     abbreviation: "DEN",
@@ -92,7 +92,7 @@ export const teams: Team[] = [
     headCoach: "Robert Anderson",
   },
   {
-    id: "empire-lions",
+    id: 7,
     name: "Empire Lions",
     city: "New York",
     abbreviation: "NYE",
@@ -107,7 +107,7 @@ export const teams: Team[] = [
     headCoach: "Anthony Martinez",
   },
   {
-    id: "steel-warriors",
+    id: 8,
     name: "Steel Warriors",
     city: "Pittsburgh",
     abbreviation: "PIT",
@@ -122,7 +122,7 @@ export const teams: Team[] = [
     headCoach: "Steven Davis",
   },
   {
-    id: "galaxy-stars",
+    id: 9,
     name: "Galaxy Stars",
     city: "Houston",
     abbreviation: "HOU",
@@ -137,7 +137,7 @@ export const teams: Team[] = [
     headCoach: "David Johnson",
   },
   {
-    id: "liberty-eagles",
+    id: 10,
     name: "Liberty Eagles",
     city: "Boston",
     abbreviation: "BOS",
@@ -150,5 +150,35 @@ export const teams: Team[] = [
     arena: "Liberty Hall",
     arenaCapacity: 18800,
     headCoach: "Patrick O'Brien",
+  },
+  {
+    id: 11,
+    name: "Savanna Panthers",
+    city: "Atlanta",
+    abbreviation: "ATL",
+    logo: "/images/logos/teams/savanna-panthers.png",
+    primaryColor: "#0F172A",
+    secondaryColor: "#F43F5E",
+    conference: "East",
+    division: "Southeast",
+    founded: 2018,
+    arena: "Panther Den",
+    arenaCapacity: 18200,
+    headCoach: "Leonard Brooks",
+  },
+  {
+    id: 12,
+    name: "Solar Rangers",
+    city: "Dallas",
+    abbreviation: "DAL",
+    logo: "/images/logos/teams/solar-rangers.png",
+    primaryColor: "#2563EB",
+    secondaryColor: "#FBBF24",
+    conference: "West",
+    division: "Southwest",
+    founded: 2016,
+    arena: "Ranger Arena",
+    arenaCapacity: 20500,
+    headCoach: "Franklin Morales",
   },
 ];

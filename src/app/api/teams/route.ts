@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
-import { nbaApi } from "@/lib/nba-api";
+import { tsiApi } from "@/lib/tsi-api";
+
+export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/teams
- * Récupère toutes les équipes NBA
+ * Récupère toutes les équipes TSI League
  */
 export async function GET() {
   try {
-    const teams = await nbaApi.getAllTeams();
+    const teams = tsiApi.getAllTeams();
 
     return NextResponse.json({
       success: true,

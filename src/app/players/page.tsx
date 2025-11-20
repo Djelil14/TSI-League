@@ -6,12 +6,12 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import Image from "next/image";
-import { NBAPlayer, NBATeam } from "@/types/nba-api";
-import { TSI_LEAGUE_CONFIG } from "@/lib/tsi-config";
+import type { TSIPlayer, TSITeam } from "@/lib/tsi-api";
+import { getTeamLogo } from "@/lib/utils/team-utils";
 
 export default function PlayersPage() {
-  const [players, setPlayers] = useState<NBAPlayer[]>([]);
-  const [teams, setTeams] = useState<NBATeam[]>([]);
+  const [players, setPlayers] = useState<TSIPlayer[]>([]);
+  const [teams, setTeams] = useState<TSITeam[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTeam, setSelectedTeam] = useState<string>("all");
   const [selectedPosition, setSelectedPosition] = useState<string>("all");
@@ -19,37 +19,13 @@ export default function PlayersPage() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
-  // Helper function to get team logo path
-  const getTeamLogo = (teamName: string): string => {
-    const logoMap: { [key: string]: string } = {
-      "Atlanta Hawks": "Atlanta.png",
-      "Boston Celtics": "Boston.png",
-      "Chicago Bulls": "Chicago.png",
-      "LA Clippers": "LAC.png",
-      "Los Angeles Lakers": "Lakers.png",
-      "New York Knicks": "NYK.png",
-      "Philadelphia 76ers": "PHI.png",
-      "Portland Trail Blazers": "POR.png",
-      "Golden State Warriors": "Golden State.png",
-    };
-
-    const fileName = logoMap[teamName];
-    return fileName ? `/images/logos/teams/${fileName}` : "/images/logos/site/tsi-logo.png";
-  };
-
   useEffect(() => {
     async function fetchTeams() {
       try {
         const response = await fetch("/api/teams");
         const result = await response.json();
         const allTeams = result.data || result;
-
-        // Filter to only TSI League teams
-        const tsiTeams = allTeams.filter((team: NBATeam) =>
-          TSI_LEAGUE_CONFIG.selectedTeamIds.includes(team.id)
-        );
-
-        setTeams(tsiTeams);
+        setTeams(allTeams);
       } catch (error) {
         console.error("Error fetching teams:", error);
       }
@@ -61,71 +37,30 @@ export default function PlayersPage() {
     async function fetchPlayers() {
       setLoading(true);
       try {
-        let allPlayers: NBAPlayer[] = [];
-        let cursor: string | null = null;
-        const fetchedPlayers: NBAPlayer[] = [];
+        const params = new URLSearchParams({
+          per_page: "100",
+        });
 
-        // Fetch ALL players with pagination (without team_ids filter which doesn't work)
-        do {
-          const params = new URLSearchParams({
-            per_page: "100",
-          });
-
-          if (cursor) {
-            params.append("cursor", cursor);
-          }
-
-          if (searchQuery) {
-            params.append("search", searchQuery);
-          }
-
-          const response = await fetch(`/api/players?${params.toString()}`);
-          const data = await response.json();
-
-          if (data.success && data.data) {
-            fetchedPlayers.push(...data.data);
-            cursor = data.meta?.next_cursor || null;
-          } else {
-            break;
-          }
-
-          // Limit total fetches to avoid too many requests
-          if (fetchedPlayers.length >= 500) break;
-        } while (cursor);
-
-        // Filter to only TSI League teams
-        const tsiPlayers = fetchedPlayers.filter((player) =>
-          TSI_LEAGUE_CONFIG.selectedTeamIds.includes(player.team.id)
-        );
-
-        // If filtering by specific team, filter further
-        if (selectedTeam !== "all") {
-          const teamId = parseInt(selectedTeam);
-          const teamPlayers = tsiPlayers.filter(
-            (player) => player.team.id === teamId
-          );
-          allPlayers = teamPlayers.slice(0, TSI_LEAGUE_CONFIG.playersPerTeam);
-        } else {
-          // Group by team and limit to 10 per team
-          const playersByTeam: { [key: number]: NBAPlayer[] } = {};
-
-          tsiPlayers.forEach((player) => {
-            if (!playersByTeam[player.team.id]) {
-              playersByTeam[player.team.id] = [];
-            }
-            if (playersByTeam[player.team.id].length < TSI_LEAGUE_CONFIG.playersPerTeam) {
-              playersByTeam[player.team.id].push(player);
-            }
-          });
-
-          // Flatten all players
-          allPlayers = Object.values(playersByTeam).flat();
+        if (searchQuery) {
+          params.append("search", searchQuery);
         }
 
-        setPlayers(allPlayers);
-        setHasMore(false);
+        if (selectedTeam !== "all") {
+          params.append("team_ids", selectedTeam);
+        }
+
+        const response = await fetch(`/api/players?${params.toString()}`);
+        const data = await response.json();
+
+        if (data.success && data.data) {
+          setPlayers(data.data);
+        } else {
+          setPlayers([]);
+        }
+        setHasMore(data.meta?.page < data.meta?.total_pages);
       } catch (error) {
         console.error("Error fetching players:", error);
+        setPlayers([]);
       } finally {
         setLoading(false);
       }
@@ -153,7 +88,7 @@ export default function PlayersPage() {
           TSI League Players
         </h1>
         <p className="text-lg text-brand-secondary-600 dark:text-brand-secondary-400">
-          Browse and search through all {TSI_LEAGUE_CONFIG.league.totalPlayers} players competing in the Thunder Strike International League
+          Browse and search through all players competing in the Thunder Strike International League
         </p>
       </div>
 
@@ -242,15 +177,27 @@ export default function PlayersPage() {
               {filteredPlayers.map((player) => (
                 <Link key={player.id} href={`/players/${player.id}`}>
                   <Card className="card-hover group h-full p-6 transition-all hover:border-brand-primary-500">
-                    {/* Team Logo */}
+                    {/* Player Photo */}
                     <div className="mb-4 flex justify-center">
-                      <div className="relative h-16 w-16">
-                        <Image
-                          src={getTeamLogo(player.team.full_name)}
-                          alt={`${player.team.full_name} logo`}
-                          fill
-                          className="object-contain"
-                        />
+                      <div className="relative h-32 w-32 overflow-hidden rounded-full bg-brand-secondary-100 dark:bg-brand-secondary-800 border-2 border-brand-primary-500 flex items-center justify-center">
+                        {player.photo ? (
+                          <Image
+                            src={player.photo}
+                            alt={`${player.first_name} ${player.last_name}`}
+                            fill
+                            className="object-cover"
+                            onError={(e) => {
+                              // Fallback to placeholder if image doesn't exist
+                              const target = e.target as HTMLImageElement;
+                              target.src = "/images/players/placeholder.jpg";
+                            }}
+                            unoptimized
+                          />
+                        ) : (
+                          <div className="text-4xl font-bold text-brand-primary-500">
+                            {player.first_name[0]}{player.last_name[0]}
+                          </div>
+                        )}
                       </div>
                     </div>
 

@@ -1,191 +1,195 @@
 import type { Player } from "@/types";
 
-export const players: Player[] = [
-  {
-    id: "player-1",
-    firstName: "Jordan",
-    lastName: "Matthews",
-    jerseyNumber: 23,
-    position: "SG",
-    teamId: "phx-storm",
-    birthDate: "1998-03-15",
-    height: 198,
-    weight: 93,
-    nationality: "USA",
-    stats: {
-      gamesPlayed: 45,
-      minutesPerGame: 36.5,
-      pointsPerGame: 28.4,
-      assistsPerGame: 5.2,
-      reboundsPerGame: 6.1,
-      stealsPerGame: 1.8,
-      blocksPerGame: 0.5,
-      fieldGoalPercentage: 48.5,
-      threePointPercentage: 38.2,
-      freeThrowPercentage: 87.3,
-      turnoversPerGame: 2.8,
-    },
-    contract: {
-      salary: 35000000,
-      yearsRemaining: 3,
-      startDate: "2023-07-01",
-      endDate: "2027-06-30",
-    },
-  },
-  {
-    id: "player-2",
-    firstName: "Marcus",
-    lastName: "Johnson",
-    jerseyNumber: 7,
-    position: "PG",
-    teamId: "phx-storm",
-    birthDate: "1996-08-22",
-    height: 188,
-    weight: 84,
-    nationality: "USA",
-    stats: {
-      gamesPlayed: 47,
-      minutesPerGame: 33.2,
-      pointsPerGame: 18.6,
-      assistsPerGame: 9.4,
-      reboundsPerGame: 4.2,
-      stealsPerGame: 2.1,
-      blocksPerGame: 0.3,
-      fieldGoalPercentage: 45.8,
-      threePointPercentage: 36.5,
-      freeThrowPercentage: 82.1,
-      turnoversPerGame: 3.5,
-    },
-    contract: {
-      salary: 28000000,
-      yearsRemaining: 2,
-      startDate: "2023-07-01",
-      endDate: "2026-06-30",
-    },
-  },
-  {
-    id: "player-3",
-    firstName: "DeAndre",
-    lastName: "Williams",
-    jerseyNumber: 32,
-    position: "C",
-    teamId: "phx-storm",
-    birthDate: "1997-11-05",
-    height: 211,
-    weight: 115,
-    nationality: "USA",
-    stats: {
-      gamesPlayed: 44,
-      minutesPerGame: 30.8,
-      pointsPerGame: 14.2,
-      assistsPerGame: 2.1,
-      reboundsPerGame: 11.8,
-      stealsPerGame: 0.9,
-      blocksPerGame: 2.4,
-      fieldGoalPercentage: 58.3,
-      threePointPercentage: 0,
-      freeThrowPercentage: 68.5,
-      turnoversPerGame: 1.9,
-    },
-    contract: {
-      salary: 22000000,
-      yearsRemaining: 4,
-      startDate: "2022-07-01",
-      endDate: "2027-06-30",
-    },
-  },
-  {
-    id: "player-4",
-    firstName: "Kevin",
-    lastName: "Anderson",
-    jerseyNumber: 35,
-    position: "PF",
-    teamId: "ny-titans",
-    birthDate: "1995-06-18",
-    height: 206,
-    weight: 109,
-    nationality: "USA",
-    stats: {
-      gamesPlayed: 46,
-      minutesPerGame: 35.1,
-      pointsPerGame: 26.8,
-      assistsPerGame: 3.9,
-      reboundsPerGame: 8.5,
-      stealsPerGame: 1.2,
-      blocksPerGame: 1.1,
-      fieldGoalPercentage: 51.2,
-      threePointPercentage: 39.1,
-      freeThrowPercentage: 85.7,
-      turnoversPerGame: 2.3,
-    },
-    contract: {
-      salary: 38000000,
-      yearsRemaining: 2,
-      startDate: "2022-07-01",
-      endDate: "2025-06-30",
-    },
-  },
-  {
-    id: "player-5",
-    firstName: "Damian",
-    lastName: "Carter",
-    jerseyNumber: 1,
-    position: "PG",
-    teamId: "ny-titans",
-    birthDate: "1999-02-10",
-    height: 185,
-    weight: 82,
-    nationality: "USA",
-    stats: {
-      gamesPlayed: 47,
-      minutesPerGame: 32.4,
-      pointsPerGame: 21.3,
-      assistsPerGame: 8.7,
-      reboundsPerGame: 3.8,
-      stealsPerGame: 1.9,
-      blocksPerGame: 0.2,
-      fieldGoalPercentage: 46.3,
-      threePointPercentage: 41.2,
-      freeThrowPercentage: 88.9,
-      turnoversPerGame: 2.9,
-    },
-    contract: {
-      salary: 32000000,
-      yearsRemaining: 3,
-      startDate: "2023-07-01",
-      endDate: "2027-06-30",
-    },
-  },
-  {
-    id: "player-6",
-    firstName: "Kawhi",
-    lastName: "Robinson",
-    jerseyNumber: 2,
-    position: "SF",
-    teamId: "ny-titans",
-    birthDate: "1994-07-29",
-    height: 201,
-    weight: 104,
-    nationality: "USA",
-    stats: {
-      gamesPlayed: 38,
-      minutesPerGame: 31.5,
-      
-      pointsPerGame: 24.1,
-      assistsPerGame: 4.6,
-      reboundsPerGame: 7.3,
-      stealsPerGame: 2.4,
-      blocksPerGame: 0.8,
-      fieldGoalPercentage: 49.8,
-      threePointPercentage: 37.5,
-      freeThrowPercentage: 83.2,
-      turnoversPerGame: 2.1,
-    },
-    contract: {
-      salary: 42000000,
-      yearsRemaining: 1,
-      startDate: "2021-07-01",
-      endDate: "2025-06-30",
-    },
-  },
+// Helper function to generate realistic player stats
+function generatePlayerStats(position: string, isStar: boolean = false) {
+  const baseStats = {
+    gamesPlayed: 40 + Math.floor(Math.random() * 10),
+    minutesPerGame: 25 + Math.floor(Math.random() * 15),
+    turnoversPerGame: 1.5 + Math.random() * 2,
+  };
+
+  if (position === "PG") {
+    return {
+      ...baseStats,
+      pointsPerGame: isStar ? 20 + Math.random() * 8 : 8 + Math.random() * 10,
+      assistsPerGame: isStar ? 8 + Math.random() * 4 : 3 + Math.random() * 5,
+      reboundsPerGame: 3 + Math.random() * 4,
+      stealsPerGame: 1 + Math.random() * 1.5,
+      blocksPerGame: 0.1 + Math.random() * 0.3,
+      fieldGoalPercentage: 42 + Math.random() * 8,
+      threePointPercentage: 35 + Math.random() * 8,
+      freeThrowPercentage: 75 + Math.random() * 15,
+    };
+  } else if (position === "SG") {
+    return {
+      ...baseStats,
+      pointsPerGame: isStar ? 22 + Math.random() * 8 : 10 + Math.random() * 10,
+      assistsPerGame: isStar ? 5 + Math.random() * 3 : 2 + Math.random() * 3,
+      reboundsPerGame: 3 + Math.random() * 4,
+      stealsPerGame: 1 + Math.random() * 1.5,
+      blocksPerGame: 0.2 + Math.random() * 0.4,
+      fieldGoalPercentage: 43 + Math.random() * 7,
+      threePointPercentage: 36 + Math.random() * 8,
+      freeThrowPercentage: 78 + Math.random() * 12,
+    };
+  } else if (position === "SF") {
+    return {
+      ...baseStats,
+      pointsPerGame: isStar ? 20 + Math.random() * 8 : 9 + Math.random() * 9,
+      assistsPerGame: isStar ? 4 + Math.random() * 3 : 2 + Math.random() * 2,
+      reboundsPerGame: 5 + Math.random() * 5,
+      stealsPerGame: 1 + Math.random() * 1.5,
+      blocksPerGame: 0.3 + Math.random() * 0.7,
+      fieldGoalPercentage: 44 + Math.random() * 8,
+      threePointPercentage: 34 + Math.random() * 10,
+      freeThrowPercentage: 76 + Math.random() * 14,
+    };
+  } else if (position === "PF") {
+    return {
+      ...baseStats,
+      pointsPerGame: isStar ? 18 + Math.random() * 8 : 8 + Math.random() * 8,
+      assistsPerGame: isStar ? 3 + Math.random() * 2 : 1 + Math.random() * 2,
+      reboundsPerGame: 7 + Math.random() * 6,
+      stealsPerGame: 0.8 + Math.random() * 1.2,
+      blocksPerGame: 0.5 + Math.random() * 1.2,
+      fieldGoalPercentage: 46 + Math.random() * 8,
+      threePointPercentage: 32 + Math.random() * 8,
+      freeThrowPercentage: 72 + Math.random() * 16,
+    };
+  } else { // C
+    return {
+      ...baseStats,
+      pointsPerGame: isStar ? 16 + Math.random() * 6 : 7 + Math.random() * 7,
+      assistsPerGame: isStar ? 2 + Math.random() * 2 : 0.5 + Math.random() * 1.5,
+      reboundsPerGame: 9 + Math.random() * 6,
+      stealsPerGame: 0.5 + Math.random() * 1,
+      blocksPerGame: 1.2 + Math.random() * 1.8,
+      fieldGoalPercentage: 50 + Math.random() * 10,
+      threePointPercentage: 0 + Math.random() * 5,
+      freeThrowPercentage: 65 + Math.random() * 20,
+    };
+  }
+}
+
+// Helper function to generate contract
+function generateContract() {
+  const yearsRemaining = 1 + Math.floor(Math.random() * 4);
+  const startYear = 2021 + Math.floor(Math.random() * 3);
+  return {
+    salary: 5000000 + Math.floor(Math.random() * 35000000),
+    yearsRemaining,
+    startDate: `${startYear}-07-01`,
+    endDate: `${startYear + yearsRemaining}-06-30`,
+  };
+}
+
+// Helper function to generate height and weight based on position
+function generatePhysicalAttributes(position: string) {
+  if (position === "PG") {
+    return {
+      height: 180 + Math.floor(Math.random() * 10), // 180-190 cm
+      weight: 75 + Math.floor(Math.random() * 10), // 75-85 kg
+    };
+  } else if (position === "SG") {
+    return {
+      height: 190 + Math.floor(Math.random() * 8), // 190-198 cm
+      weight: 85 + Math.floor(Math.random() * 10), // 85-95 kg
+    };
+  } else if (position === "SF") {
+    return {
+      height: 198 + Math.floor(Math.random() * 8), // 198-206 cm
+      weight: 95 + Math.floor(Math.random() * 12), // 95-107 kg
+    };
+  } else if (position === "PF") {
+    return {
+      height: 203 + Math.floor(Math.random() * 8), // 203-211 cm
+      weight: 100 + Math.floor(Math.random() * 15), // 100-115 kg
+    };
+  } else { // C
+    return {
+      height: 208 + Math.floor(Math.random() * 8), // 208-216 cm
+      weight: 110 + Math.floor(Math.random() * 15), // 110-125 kg
+    };
+  }
+}
+
+// First names and last names for generating player names
+const firstNames = [
+  "James", "Michael", "David", "Chris", "Anthony", "Kevin", "Stephen", "Russell",
+  "LeBron", "Kawhi", "Paul", "Damian", "Devin", "Jayson", "Jaylen", "Trae",
+  "Luka", "Zion", "Ja", "De'Aaron", "Donovan", "Bradley", "Kyle", "Marcus",
+  "Derrick", "Blake", "Andre", "Pascal", "Fred", "OG", "Gary", "Norman",
+  "Terry", "Malcolm", "Grant", "Robert", "Jrue", "Khris", "Brook", "Bobby",
+  "Jordan", "DeAndre", "Tobias", "Ben", "Joel", "Seth", "Danny", "Matisse",
+  "Tyler", "Bam", "Jimmy", "Duncan", "Goran", "Kendrick", "Meyers", "Udonis",
+  "Jalen", "Cade", "Killian", "Saddiq", "Isaiah", "Hamidou", "Sekou", "Josh",
+  "Nikola", "Jamal", "Michael", "Will", "Aaron", "Monte", "Facundo", "PJ",
+  "Stephen", "Klay", "Draymond", "Andrew", "Kevon", "James", "Damion", "Juan",
+  "Paul", "Kawhi", "Marcus", "Nicolas", "Serge", "Patrick", "Luke", "Amir",
+  "LeBron", "Anthony", "Russell", "Talen", "Austin", "Kyle", "Wesley", "Andre",
+  "Luka", "Kristaps", "Tim", "Dorian", "Maxi", "Dwight", "Jalen", "Josh",
+  "Damian", "CJ", "Norman", "Robert", "Jusuf", "Anfernee", "Nassir", "Cody",
+  "Pascal", "OG", "Fred", "Gary", "Scottie", "Precious", "Chris", "Thaddeus",
 ];
+
+const lastNames = [
+  "James", "Curry", "Durant", "Harden", "Westbrook", "Leonard", "George", "Butler",
+  "Antetokounmpo", "Jokic", "Embiid", "Tatum", "Brown", "Young", "Doncic", "Morant",
+  "Fox", "Mitchell", "Beal", "Lowry", "VanVleet", "Siakam", "Anunoby", "Trent",
+  "Rozier", "Hayward", "Ball", "Bridges", "Washington", "Smith", "Cunningham", "Hayes",
+  "Bey", "Stewart", "Diallo", "Jackson", "Holiday", "Middleton", "Lopez", "Portis",
+  "Adebayo", "Herro", "Robinson", "Butler", "Dragic", "Nunn", "Leonard", "Olynyk",
+  "Murray", "Porter", "Barton", "Morris", "Millsap", "Green", "Harris", "Campazzo",
+  "Thompson", "Wiggins", "Looney", "Poole", "Lee", "Moody", "Kuminga", "Wiseman",
+  "Jackson", "Batum", "Ibaka", "Beverley", "Mann", "Kennard", "Coffey", "Hartenstein",
+  "Davis", "Westbrook", "Monk", "Reaves", "Johnson", "Nunn", "Ellington", "Howard",
+  "Brunson", "Hardaway", "Finney-Smith", "Kleber", "Powell", "Bullock", "Burke", "Brown",
+  "Simons", "Covington", "Nurkic", "Little", "Snell", "Elleby", "Blevins", "Watford",
+  "Barnes", "Achiuwa", "Boucher", "Birch", "Flynn", "Banton", "Champagnie", "Watanabe",
+];
+
+const positions = ["PG", "SG", "SF", "PF", "C"] as const;
+const nationalities = ["USA", "Canada", "France", "Spain", "Australia", "Serbia", "Greece", "Croatia", "Slovenia", "Germany"];
+
+// Team IDs - 12 teams total
+const teamIds = [
+  "phx-storm", "ny-titans", "la-thunder", "chi-blaze", "mia-heat", "dal-mavericks",
+  "bos-celtics", "mil-bucks", "det-pistons", "gsw-warriors", "lac-clippers", "phi-76ers",
+];
+
+// Generate players: 10 players per team
+const players: Player[] = [];
+let playerCounter = 1;
+
+teamIds.forEach((teamId) => {
+  // Generate 10 players per team
+  for (let i = 0; i < 10; i++) {
+    const isStar = i < 2; // First 2 players are stars
+    const position = positions[i % positions.length];
+    const physical = generatePhysicalAttributes(position);
+    const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+    const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+    
+    // Ensure unique jersey numbers (1-99)
+    const jerseyNumber = (i * 10) + (Math.floor(Math.random() * 9) + 1);
+    
+    players.push({
+      id: `player-${playerCounter}`,
+      firstName,
+      lastName,
+      jerseyNumber: jerseyNumber > 99 ? jerseyNumber % 99 : jerseyNumber,
+      position,
+      teamId,
+      birthDate: `${1990 + Math.floor(Math.random() * 15)}-${String(Math.floor(Math.random() * 12) + 1).padStart(2, "0")}-${String(Math.floor(Math.random() * 28) + 1).padStart(2, "0")}`,
+      height: physical.height,
+      weight: physical.weight,
+      nationality: nationalities[Math.floor(Math.random() * nationalities.length)],
+      stats: generatePlayerStats(position, isStar),
+      contract: generateContract(),
+    });
+    
+    playerCounter++;
+  }
+});
+
+export { players };

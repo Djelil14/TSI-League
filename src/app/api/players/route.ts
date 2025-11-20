@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { nbaApi } from "@/lib/nba-api";
+import { tsiApi } from "@/lib/tsi-api";
 
 export const dynamic = 'force-dynamic';
 
@@ -7,7 +7,6 @@ export const dynamic = 'force-dynamic';
  * GET /api/players
  * Récupère la liste des joueurs avec pagination et filtres optionnels
  * Query params:
- * - cursor: Pour la pagination
  * - per_page: Nombre de résultats par page (max 100)
  * - search: Recherche par nom
  * - team_ids: Filtrer par équipe (ex: "1,2,3")
@@ -16,32 +15,40 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
 
-    const params: Record<string, string> = {};
+    // Récupérer tous les joueurs depuis tsiApi
+    let allPlayers = tsiApi.getAllPlayers();
 
-    if (searchParams.get("cursor")) {
-      params.cursor = searchParams.get("cursor")!;
+    // Filtrer par recherche si fourni
+    const searchQuery = searchParams.get("search");
+    if (searchQuery) {
+      allPlayers = tsiApi.searchPlayers(searchQuery);
     }
 
-    if (searchParams.get("per_page")) {
-      params.per_page = searchParams.get("per_page")!;
-    } else {
-      params.per_page = "25"; // Par défaut
+    // Filtrer par équipe si fourni
+    const teamIdsParam = searchParams.get("team_ids");
+    if (teamIdsParam) {
+      const teamIds = teamIdsParam.split(",").map((id) => parseInt(id.trim()));
+      allPlayers = allPlayers.filter((player) =>
+        teamIds.includes(player.team.id)
+      );
     }
 
-    if (searchParams.get("search")) {
-      params.search = searchParams.get("search")!;
-    }
-
-    if (searchParams.get("team_ids")) {
-      params.team_ids = searchParams.get("team_ids")!;
-    }
-
-    const response = await nbaApi.getAllPlayers(params);
+    // Pagination
+    const perPage = parseInt(searchParams.get("per_page") || "25");
+    const page = parseInt(searchParams.get("page") || "1");
+    const startIndex = (page - 1) * perPage;
+    const endIndex = startIndex + perPage;
+    const paginatedPlayers = allPlayers.slice(startIndex, endIndex);
 
     return NextResponse.json({
       success: true,
-      data: response.data,
-      meta: response.meta,
+      data: paginatedPlayers,
+      meta: {
+        total: allPlayers.length,
+        per_page: perPage,
+        page: page,
+        total_pages: Math.ceil(allPlayers.length / perPage),
+      },
     });
   } catch (error) {
     console.error("Error fetching players:", error);

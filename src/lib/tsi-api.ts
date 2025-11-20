@@ -29,6 +29,8 @@ export interface TSIPlayer {
   jersey_number: string;
   height: string;
   weight: string;
+  country?: string;
+  photo?: string;
   team: TSITeam;
 }
 
@@ -85,6 +87,8 @@ class TSILeagueService {
       jersey_number: player.jerseyNumber.toString(),
       height: `${Math.floor(player.height / 30.48)}'${Math.floor((player.height % 30.48) / 2.54)}"`,
       weight: player.weight.toString(),
+      country: player.nationality,
+      photo: player.photo || `/images/players/${player.id}.jpg`,
       team: this.convertTeam(team),
     };
   }

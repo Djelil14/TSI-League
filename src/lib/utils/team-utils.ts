@@ -7,7 +7,7 @@
  * Supports both TSI League teams and NBA teams for compatibility
  */
 export function getTeamLogo(teamName: string): string {
-  // TSI League teams mapping - mapping complet avec tous les noms possibles
+  // TSI League teams mapping - 12 teams total
   const tsiLogoMap: { [key: string]: string } = {
     // Phoenix Storm
     "Phoenix Storm": "Atlanta.png",
@@ -45,6 +45,42 @@ export function getTeamLogo(teamName: string): string {
     "dal-mavericks": "Dallas.png",
     "Dallas": "Dallas.png",
     "Mavericks": "Dallas.png",
+    
+    // Boston Celtics
+    "Boston Celtics": "Boston.png",
+    "bos-celtics": "Boston.png",
+    "Boston": "Boston.png",
+    "Celtics": "Boston.png",
+    
+    // Milwaukee Bucks
+    "Milwaukee Bucks": "Bucks.png",
+    "mil-bucks": "Bucks.png",
+    "Milwaukee": "Bucks.png",
+    "Bucks": "Bucks.png",
+    
+    // Detroit Pistons
+    "Detroit Pistons": "Detroit.png",
+    "det-pistons": "Detroit.png",
+    "Detroit": "Detroit.png",
+    "Pistons": "Detroit.png",
+    
+    // Golden State Warriors
+    "Golden State Warriors": "Golden State.png",
+    "gsw-warriors": "Golden State.png",
+    "Golden State": "Golden State.png",
+    "Warriors": "Golden State.png",
+    
+    // LA Clippers
+    "LA Clippers": "LAC.png",
+    "lac-clippers": "LAC.png",
+    "LA": "LAC.png",
+    "Clippers": "LAC.png",
+    
+    // Philadelphia 76ers
+    "Philadelphia 76ers": "PHI.png",
+    "phi-76ers": "PHI.png",
+    "Philadelphia": "PHI.png",
+    "76ers": "PHI.png",
   };
 
   // Normaliser le nom de l'équipe pour la recherche

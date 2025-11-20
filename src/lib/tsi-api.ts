@@ -31,6 +31,13 @@ export interface TSIPlayer {
   weight: string;
   country?: string;
   photo?: string;
+  birthDate?: string;
+  stats?: {
+    pointsPerGame: number;
+    assistsPerGame: number;
+    reboundsPerGame: number;
+    gamesPlayed: number;
+  };
   team: TSITeam;
 }
 
@@ -85,10 +92,17 @@ class TSILeagueService {
       last_name: player.lastName,
       position: player.position,
       jersey_number: player.jerseyNumber.toString(),
-      height: `${Math.floor(player.height / 30.48)}'${Math.floor((player.height % 30.48) / 2.54)}"`,
-      weight: player.weight.toString(),
+      height: `${player.height} cm`, // Taille en cm
+      weight: `${player.weight} kg`,
       country: player.nationality,
-      photo: player.photo || `/images/players/${player.id}.jpg`,
+      photo: player.photo || `/api/players/${this.playerIdMap.get(player.id) || 0}/avatar`,
+      birthDate: player.birthDate,
+      stats: {
+        pointsPerGame: player.stats.pointsPerGame,
+        assistsPerGame: player.stats.assistsPerGame,
+        reboundsPerGame: player.stats.reboundsPerGame,
+        gamesPlayed: player.stats.gamesPlayed,
+      },
       team: this.convertTeam(team),
     };
   }

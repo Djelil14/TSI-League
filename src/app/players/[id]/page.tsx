@@ -2,7 +2,8 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
-import { nbaApi } from "@/lib/nba-api";
+import Image from "next/image";
+import { tsiApi } from "@/lib/tsi-api";
 import { notFound } from "next/navigation";
 
 // Use dynamic rendering instead of static generation to avoid build timeouts
@@ -20,22 +21,9 @@ interface PlayerPageProps {
 
 async function getPlayerData(id: number) {
   try {
-    const player = await nbaApi.getPlayerById(id);
-
-    // Try to get player stats (requires paid tier)
-    let stats = null;
-    try {
-      const statsResponse = await nbaApi.getStats({
-        player_ids: id.toString(),
-        seasons: new Date().getFullYear().toString(),
-        per_page: "100",
-      });
-      stats = statsResponse.data;
-    } catch (error) {
-      console.log("Stats not available (requires paid tier)");
-    }
-
-    return { player, stats };
+    const player = tsiApi.getPlayerById(id);
+    // Stats are already in player.stats from the mock data
+    return { player, stats: null };
   } catch (error) {
     console.error("Error fetching player data:", error);
     return null;
@@ -55,19 +43,19 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
     notFound();
   }
 
-  const { player, stats } = data;
+  const { player } = data;
 
-  // Calculate season averages if stats available
-  const seasonStats = stats && stats.length > 0 ? {
-    gamesPlayed: stats.length,
-    ppg: (stats.reduce((sum, s) => sum + s.pts, 0) / stats.length).toFixed(1),
-    apg: (stats.reduce((sum, s) => sum + s.ast, 0) / stats.length).toFixed(1),
-    rpg: (stats.reduce((sum, s) => sum + s.reb, 0) / stats.length).toFixed(1),
-    spg: (stats.reduce((sum, s) => sum + s.stl, 0) / stats.length).toFixed(1),
-    bpg: (stats.reduce((sum, s) => sum + s.blk, 0) / stats.length).toFixed(1),
-    fgPct: ((stats.reduce((sum, s) => sum + (s.fg_pct || 0), 0) / stats.length) * 100).toFixed(1),
-    fg3Pct: ((stats.reduce((sum, s) => sum + (s.fg3_pct || 0), 0) / stats.length) * 100).toFixed(1),
-    ftPct: ((stats.reduce((sum, s) => sum + (s.ft_pct || 0), 0) / stats.length) * 100).toFixed(1),
+  // Use player stats from mock data
+  const seasonStats = player && (player as any).stats ? {
+    gamesPlayed: (player as any).stats.gamesPlayed || 0,
+    ppg: ((player as any).stats.pointsPerGame || 0).toFixed(1),
+    apg: ((player as any).stats.assistsPerGame || 0).toFixed(1),
+    rpg: ((player as any).stats.reboundsPerGame || 0).toFixed(1),
+    spg: ((player as any).stats.stealsPerGame || 0).toFixed(1),
+    bpg: ((player as any).stats.blocksPerGame || 0).toFixed(1),
+    fgPct: ((player as any).stats.fieldGoalPercentage || 0).toFixed(1),
+    fg3Pct: ((player as any).stats.threePointPercentage || 0).toFixed(1),
+    ftPct: ((player as any).stats.freeThrowPercentage || 0).toFixed(1),
   } : null;
 
   return (
@@ -75,13 +63,15 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
       {/* Player Header */}
       <div className="mb-12">
         <div className="flex flex-col items-center gap-6 md:flex-row">
-          {/* Player Photo Placeholder */}
-          <div className="flex h-48 w-48 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-primary-500 to-brand-accent-500 shadow-glow">
-            <div className="text-center text-white">
-              <div className="text-7xl font-display font-black">
-                #{player.jersey_number || "0"}
-              </div>
-            </div>
+          {/* Player Photo */}
+          <div className="relative h-48 w-48 overflow-hidden rounded-2xl border-2 border-brand-primary-500 shadow-glow">
+            <Image
+              src={player.photo || `/api/players/${player.id}/avatar`}
+              alt={`${player.first_name} ${player.last_name}`}
+              fill
+              className="object-cover"
+              unoptimized
+            />
           </div>
 
           {/* Player Info */}
@@ -221,33 +211,17 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
-                {player.draft_year && player.draft_year > 0 && (
+                {player.birthDate && (
                   <div>
                     <div className="text-sm text-brand-secondary-500">
-                      Draft Year
+                      Birth Date
                     </div>
                     <div className="text-lg font-semibold">
-                      {player.draft_year}
-                    </div>
-                  </div>
-                )}
-                {player.draft_round && player.draft_round > 0 && (
-                  <div>
-                    <div className="text-sm text-brand-secondary-500">
-                      Draft Round
-                    </div>
-                    <div className="text-lg font-semibold">
-                      Round {player.draft_round}, Pick {player.draft_number}
-                    </div>
-                  </div>
-                )}
-                {player.college && (
-                  <div>
-                    <div className="text-sm text-brand-secondary-500">
-                      College
-                    </div>
-                    <div className="text-lg font-semibold">
-                      {player.college}
+                      {new Date(player.birthDate).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
                     </div>
                   </div>
                 )}
@@ -258,6 +232,25 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
                     </div>
                     <div className="text-lg font-semibold">
                       {player.country}
+                    </div>
+                  </div>
+                )}
+                {player.birthDate && (
+                  <div>
+                    <div className="text-sm text-brand-secondary-500">
+                      Age
+                    </div>
+                    <div className="text-lg font-semibold">
+                      {(() => {
+                        const today = new Date();
+                        const birth = new Date(player.birthDate!);
+                        let age = today.getFullYear() - birth.getFullYear();
+                        const monthDiff = today.getMonth() - birth.getMonth();
+                        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+                          age--;
+                        }
+                        return age;
+                      })()} years old
                     </div>
                   </div>
                 )}

@@ -80,6 +80,19 @@ export default function PlayersPage() {
 
   const positions = ["PG", "SG", "SF", "PF", "C"];
 
+  // Helper function to calculate age from birth date
+  const calculateAge = (birthDate?: string): number | null => {
+    if (!birthDate) return null;
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
   return (
     <div className="container-custom py-12">
       {/* Header */}
@@ -179,82 +192,142 @@ export default function PlayersPage() {
                   <Card className="card-hover group h-full p-6 transition-all hover:border-brand-primary-500">
                     {/* Player Photo */}
                     <div className="mb-4 flex justify-center">
-                      <div className="relative h-32 w-32 overflow-hidden rounded-full bg-brand-secondary-100 dark:bg-brand-secondary-800 border-2 border-brand-primary-500 flex items-center justify-center">
-                        {player.photo ? (
-                          <Image
-                            src={player.photo}
-                            alt={`${player.first_name} ${player.last_name}`}
-                            fill
-                            className="object-cover"
-                            onError={(e) => {
-                              // Fallback to placeholder if image doesn't exist
-                              const target = e.target as HTMLImageElement;
-                              target.src = "/images/players/placeholder.jpg";
-                            }}
-                            unoptimized
-                          />
-                        ) : (
-                          <div className="text-4xl font-bold text-brand-primary-500">
-                            {player.first_name[0]}{player.last_name[0]}
-                          </div>
-                        )}
+                      <div className="relative h-32 w-32 overflow-hidden rounded-full border-2 border-brand-primary-500">
+                        <Image
+                          src={player.photo || `/api/players/${player.id}/avatar`}
+                          alt={`${player.first_name} ${player.last_name}`}
+                          fill
+                          className="object-cover"
+                          unoptimized
+                        />
                       </div>
                     </div>
 
-                    {/* Player Header */}
-                    <div className="mb-4 flex items-start justify-between">
-                      <div className="flex-1">
-                        <h3 className="text-lg font-bold group-hover:text-brand-primary-500 transition-colors">
-                          {player.first_name} {player.last_name}
-                        </h3>
-                        <p className="text-sm text-brand-secondary-500">
-                          {player.team.full_name}
-                        </p>
-                      </div>
-                      <Badge variant="primary">#{player.jersey_number || "0"}</Badge>
+                    {/* Player Name */}
+                    <div className="mb-3 text-center">
+                      <h3 className="text-lg font-bold group-hover:text-brand-primary-500 transition-colors">
+                        {player.first_name} {player.last_name}
+                      </h3>
+                      <p className="mt-1 text-sm text-brand-secondary-500">
+                        {player.team.full_name}
+                      </p>
                     </div>
 
-                    {/* Player Stats */}
-                    <div className="space-y-2 text-sm">
+                    {/* Player Attributes */}
+                    <div className="mb-4 space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-brand-secondary-500">
-                          Position:
-                        </span>
+                        <span className="text-brand-secondary-500">Position:</span>
                         <Badge variant="secondary" size="sm">
                           {player.position}
                         </Badge>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-brand-secondary-500">
-                          Height:
-                        </span>
-                        <span className="font-semibold">
-                          {player.height || "N/A"}
-                        </span>
+                        <span className="text-brand-secondary-500">Height:</span>
+                        <span className="font-semibold">{player.height || "N/A"}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-brand-secondary-500">
-                          Weight:
-                        </span>
-                        <span className="font-semibold">
-                          {player.weight || "N/A"}
-                        </span>
+                        <span className="text-brand-secondary-500">Weight:</span>
+                        <span className="font-semibold">{player.weight || "N/A"}</span>
                       </div>
-                      {player.country && (
+                      {player.birthDate && (
                         <div className="flex justify-between">
-                          <span className="text-brand-secondary-500">
-                            Country:
-                          </span>
+                          <span className="text-brand-secondary-500">Age:</span>
                           <span className="font-semibold">
-                            {player.country}
+                            {calculateAge(player.birthDate) || "N/A"} years
                           </span>
                         </div>
                       )}
+                      <div className="flex justify-between">
+                        <span className="text-brand-secondary-500">Number:</span>
+                        <span className="font-semibold">#{player.jersey_number || "0"}</span>
+                      </div>
                     </div>
 
+                    {/* Performance Statistics */}
+                    {player.stats && (
+                      <div className="mb-4 border-t border-brand-secondary-200 pt-4 dark:border-brand-secondary-700">
+                        <div className="grid grid-cols-3 gap-4 text-center">
+                          {/* Points - Basketball Icon */}
+                          <div>
+                            <div className="mb-1 flex justify-center">
+                              <svg
+                                className="h-6 w-6 text-brand-primary-500"
+                                fill="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                                <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" strokeWidth="1.5"/>
+                                <path d="M8 12h8M12 8v8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                              </svg>
+                            </div>
+                            <div className="text-lg font-bold text-brand-primary-500">
+                              {player.stats.pointsPerGame.toFixed(1)}
+                            </div>
+                            <div className="text-xs text-brand-secondary-500">Points</div>
+                          </div>
+                          {/* Assists - Hand Passing Icon */}
+                          <div>
+                            <div className="mb-1 flex justify-center">
+                              <svg
+                                className="h-6 w-6 text-brand-primary-500"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M7 16l-4-4m0 0l4-4m-4 4h18"
+                                />
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={1.5}
+                                  d="M3 12h18M3 12l4-4M3 12l4 4"
+                                />
+                              </svg>
+                            </div>
+                            <div className="text-lg font-bold text-brand-primary-500">
+                              {player.stats.assistsPerGame.toFixed(1)}
+                            </div>
+                            <div className="text-xs text-brand-secondary-500">Assists</div>
+                          </div>
+                          {/* Rebounds - Hand Catching Icon */}
+                          <div>
+                            <div className="mb-1 flex justify-center">
+                              <svg
+                                className="h-6 w-6 text-brand-primary-500"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M17 8l4 4m0 0l-4 4m4-4H3"
+                                />
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={1.5}
+                                  d="M21 12h-18M21 12l-4-4M21 12l-4 4"
+                                />
+                              </svg>
+                            </div>
+                            <div className="text-lg font-bold text-brand-primary-500">
+                              {player.stats.reboundsPerGame.toFixed(1)}
+                            </div>
+                            <div className="text-xs text-brand-secondary-500">Rebounds</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Team Badge */}
-                    <div className="mt-4 pt-4 border-t border-brand-secondary-200 dark:border-brand-secondary-700">
-                      <Badge variant="outline" size="sm">
+                    <div className="border-t border-brand-secondary-200 pt-3 dark:border-brand-secondary-700">
+                      <Badge variant="outline" size="sm" className="w-full justify-center">
                         {player.team.abbreviation}
                       </Badge>
                     </div>
